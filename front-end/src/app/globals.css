@@ -1,0 +1,358 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f4efe4;
+  --sheet: #fbf8f1;
+  --ink: #1c1914;
+  --muted: #5c564c;
+  --rule: #c9c1b2;
+  --rule-strong: #1c1914;
+  --pass: #1f5c3a;
+  --fail: #8b1e1e;
+  --error: #6b5420;
+  --wash: #efe8d8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif), "Palatino Linotype", Palatino, serif;
+  font-size: 17.5px;
+  line-height: 1.62;
+}
+
+.page {
+  min-height: 100%;
+}
+
+.running-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(760px, calc(100% - 2.5rem));
+  margin: 0 auto;
+  padding: 1.1rem 0 0.7rem;
+  font-family: var(--font-display), "Times New Roman", serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule);
+}
+
+.paper {
+  width: min(760px, calc(100% - 2.5rem));
+  margin: 0 auto 4.5rem;
+  padding: 2.4rem 0 0;
+}
+
+.journal {
+  margin: 0 0 1.6rem;
+  text-align: center;
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--muted);
+}
+
+.paper > h1 {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(2.4rem, 5vw, 3.15rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
+.subtitle {
+  margin: 0.85rem auto 0;
+  max-width: 38rem;
+  text-align: center;
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  font-size: 1.18rem;
+  line-height: 1.45;
+}
+
+.byline {
+  margin: 1.15rem 0 0;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.abstract {
+  margin: 2.4rem 0 0;
+  padding: 1rem 1.4rem;
+  background: var(--wash);
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.abstract h2 {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.abstract p {
+  margin: 0;
+  font-size: 0.98rem;
+  text-align: justify;
+  hyphens: auto;
+}
+
+section {
+  margin-top: 2.4rem;
+}
+
+section > h2 {
+  margin: 0 0 0.85rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+section > h2 span {
+  margin-right: 0.45rem;
+  font-weight: 500;
+}
+
+section > p,
+.placeholder,
+.lead-finding,
+.smallprint {
+  text-align: justify;
+  hyphens: auto;
+}
+
+.catalogue,
+.summary-table,
+.finding-meta {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.1rem 0 0.4rem;
+  font-size: 0.92rem;
+}
+
+.catalogue caption,
+.summary-table caption {
+  caption-side: top;
+  text-align: left;
+  margin-bottom: 0.45rem;
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.catalogue th,
+.catalogue td,
+.summary-table th,
+.summary-table td,
+.finding-meta th,
+.finding-meta td {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 0.55rem 0.45rem;
+  vertical-align: top;
+  text-align: left;
+}
+
+.catalogue th,
+.summary-table th,
+.finding-meta th {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+
+.finding-meta th {
+  width: 9.2rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.82em;
+}
+
+.specimen {
+  margin-top: 1rem;
+}
+
+.specimen label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+}
+
+.specimen-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.specimen-row input,
+.specimen-row button {
+  font: inherit;
+}
+
+.specimen-row input {
+  flex: 1;
+  background: var(--sheet);
+  color: var(--ink);
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  border-radius: 0;
+  padding: 0.45rem 0.1rem;
+}
+
+.specimen-row input:focus {
+  outline: none;
+  border-bottom-width: 2px;
+}
+
+.specimen-row button {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: 0.04em;
+}
+
+.specimen-row button:hover {
+  background: var(--ink);
+  color: var(--sheet);
+}
+
+.specimen-row button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.erratum {
+  margin-top: 1rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--fail);
+  border-bottom: 1px solid var(--fail);
+  color: var(--fail);
+}
+
+.lead-finding {
+  font-family: var(--font-display), Georgia, serif;
+  font-style: italic;
+  font-size: 1.12rem;
+}
+
+.smallprint {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.finding {
+  margin-top: 1.7rem;
+  padding-top: 0.2rem;
+}
+
+.finding h3 {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.12rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.finding-num {
+  margin-right: 0.45rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.verdict-inline {
+  margin-left: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.verdict-inline.pass {
+  color: var(--pass);
+}
+
+.verdict-inline.fail {
+  color: var(--fail);
+}
+
+.verdict-inline.error {
+  color: var(--error);
+}
+
+.finding.fail h3 {
+  text-decoration: none;
+}
+
+.notes {
+  margin-top: 3rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.notes h2 {
+  margin: 0 0 0.7rem;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.05rem;
+}
+
+.notes ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.notes li {
+  margin-bottom: 0.55rem;
+  padding-left: 0.25rem;
+}
+
+.placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
+
+@media (max-width: 720px) {
+  .running-head {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .specimen-row {
+    flex-direction: column;
+  }
+
+  .abstract p,
+  section > p {
+    text-align: left;
+  }
+}
