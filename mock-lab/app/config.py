@@ -29,4 +29,9 @@ class Settings:
     MTLS_CLIENT_AUTH_ENFORCED: bool = os.getenv("MTLS_CLIENT_AUTH_ENFORCED", "true").lower() == "true"
     ALLOW_WEAK_CLIENT_AUTH: bool = os.getenv("ALLOW_WEAK_CLIENT_AUTH", "false").lower() == "true"
 
+    # Feature E toggles
+    DPOP_VALIDATION_STRICT: bool = os.getenv("DPOP_VALIDATION_STRICT", "true").lower() == "true"
+    DPOP_REPLAY_PROTECTION: bool = os.getenv("DPOP_REPLAY_PROTECTION", "true").lower() == "true"
+    MTLS_BINDING_ENFORCED: bool = os.getenv("MTLS_BINDING_ENFORCED", "true").lower() == "true"
+
 settings = Settings()

@@ -1,13 +1,20 @@
-import secrets
-
 from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 from app.auth import require_client_auth
 from app.config import settings
 from app.crypto.pkce import verify_pkce
+from app.dpop.nonce_store import issue_nonce
+from app.dpop.proof import consume_proof_jti, validate_dpop_proof
+from app.mtls.binding import presented_x5t_s256
 from app.store.code_store import consume_code
+from app.store.token_store import issue_access_token
 
 router = APIRouter()
+
+
+def request_htu(request: Request) -> str:
+    return str(request.base_url).rstrip("/") + request.url.path
 
 
 def handle_authorization_code_grant(code_entry: dict, code_verifier: str | None) -> None:
@@ -20,6 +27,25 @@ def handle_authorization_code_grant(code_entry: dict, code_verifier: str | None)
             raise HTTPException(status_code=400, detail="invalid_request: plain method not allowed")
         if not verify_pkce(code_verifier, code_entry["code_challenge"], method):
             raise HTTPException(status_code=400, detail="invalid_grant: PKCE verification failed")
+
+
+def _dpop_from_request(request: Request) -> dict | None:
+    proof = request.headers.get("dpop")
+    if not proof:
+        return None
+    try:
+        result = validate_dpop_proof(
+            proof, "POST", request_htu(request), settings.DPOP_VALIDATION_STRICT
+        )
+        if result.get("jti") and result["jti"] != "loose":
+            consume_proof_jti(result["jti"], enforce=settings.DPOP_REPLAY_PROTECTION)
+        return result
+    except Exception as exc:
+        if settings.DPOP_VALIDATION_STRICT:
+            raise HTTPException(
+                status_code=400, detail=f"invalid_dpop_proof: {exc}"
+            ) from exc
+        return {"jkt": "unverified", "jti": "loose"}
 
 
 @router.post("/token")
@@ -45,6 +71,8 @@ def token(
         client_secret,
     )
 
+    dpop_result = _dpop_from_request(request)
+
     code_entry = consume_code(code)
     if code_entry is None:
         raise HTTPException(status_code=400, detail="invalid_grant: unknown or used code")
@@ -58,9 +86,35 @@ def token(
 
     handle_authorization_code_grant(code_entry, code_verifier)
 
-    return {
-        "access_token": secrets.token_urlsafe(32),
-        "token_type": "Bearer",
+    cnf: dict = {}
+    token_type = "Bearer"
+    headers = {}
+    if dpop_result:
+        cnf["jkt"] = dpop_result["jkt"]
+        token_type = "DPoP"
+        headers["DPoP-Nonce"] = issue_nonce(dpop_result["jkt"])
+    else:
+        cert_header = request.headers.get("x-ssl-client-cert")
+        if cert_header:
+            try:
+                cnf["x5t#S256"] = presented_x5t_s256(cert_header)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=400, detail=f"invalid_client: bad client certificate ({exc})"
+                ) from exc
+
+    access_token, _ = issue_access_token(
+        client_id=authenticated_id,
+        scope=code_entry["scope"],
+        cnf=cnf,
+        token_type=token_type,
+    )
+    body = {
+        "access_token": access_token,
+        "token_type": token_type,
         "expires_in": 3600,
         "scope": code_entry["scope"],
     }
+    if cnf:
+        body["cnf"] = cnf
+    return JSONResponse(content=body, headers=headers)
