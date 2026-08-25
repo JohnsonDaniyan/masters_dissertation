@@ -27,6 +27,8 @@ def metadata():
         "jwks_uri": f"{settings.BASE_URL}/jwks",
         "token_endpoint_auth_methods_supported": ["private_key_jwt", "tls_client_auth"],
         "dpop_signing_alg_values_supported": ["ES256"],
+        "authorization_response_iss_parameter_supported": not settings.ISS_PARAM_OMITTED,
+        "authorization_signing_alg_values_supported": ["ES256"],
         "require_pushed_authorization_requests": settings.PAR_ENFORCED,
     }
 

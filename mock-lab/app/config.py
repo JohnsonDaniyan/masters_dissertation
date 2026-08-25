@@ -39,4 +39,9 @@ class Settings:
     INTROSPECTION_AUTH_REQUIRED: bool = os.getenv("INTROSPECTION_AUTH_REQUIRED", "true").lower() == "true"
     RS_TRUSTS_AS_BLINDLY: bool = os.getenv("RS_TRUSTS_AS_BLINDLY", "false").lower() == "true"
 
+    # Feature G toggles
+    ISS_PARAM_OMITTED: bool = os.getenv("ISS_PARAM_OMITTED", "false").lower() == "true"
+    JARM_SIGNATURE_CHECK: bool = os.getenv("JARM_SIGNATURE_CHECK", "true").lower() == "true"
+    REDIRECT_URI_LOOSE_MATCH: bool = os.getenv("REDIRECT_URI_LOOSE_MATCH", "false").lower() == "true"
+
 settings = Settings()

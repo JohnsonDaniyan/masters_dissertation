@@ -20,6 +20,9 @@ def reset_client_auth_state():
     settings.TOKEN_UNSTRUCTURED = False
     settings.INTROSPECTION_AUTH_REQUIRED = True
     settings.RS_TRUSTS_AS_BLINDLY = False
+    settings.ISS_PARAM_OMITTED = False
+    settings.JARM_SIGNATURE_CHECK = True
+    settings.REDIRECT_URI_LOOSE_MATCH = False
     yield
     jti_store.clear()
     nonce_store.clear()
@@ -33,3 +36,6 @@ def reset_client_auth_state():
     settings.TOKEN_UNSTRUCTURED = False
     settings.INTROSPECTION_AUTH_REQUIRED = True
     settings.RS_TRUSTS_AS_BLINDLY = False
+    settings.ISS_PARAM_OMITTED = False
+    settings.JARM_SIGNATURE_CHECK = True
+    settings.REDIRECT_URI_LOOSE_MATCH = False

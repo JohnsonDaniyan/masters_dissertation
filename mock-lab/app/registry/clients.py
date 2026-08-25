@@ -57,6 +57,7 @@ CLIENTS: dict[str, dict] = {
         "client_secret": TEST_CLIENT_SECRET,
         "cert_thumbprint": None,
         "cert_pem": None,
+        "redirect_uris": ["https://client.example/callback"],
     },
     MTLS_CLIENT_ID: {
         "private_key": None,
@@ -64,6 +65,7 @@ CLIENTS: dict[str, dict] = {
         "client_secret": None,
         "cert_thumbprint": cert_sha256_thumbprint(_mtls_cert),
         "cert_pem": cert_pem(_mtls_cert),
+        "redirect_uris": ["https://client.example/callback"],
     },
     RS_CLIENT_ID: {
         "private_key": _rs_key,
@@ -71,6 +73,7 @@ CLIENTS: dict[str, dict] = {
         "client_secret": None,
         "cert_thumbprint": None,
         "cert_pem": None,
+        "redirect_uris": [],
     },
 }
 
@@ -97,6 +100,13 @@ def get_client_private_key(client_id: str):
 
 def get_mtls_cert_pem() -> str:
     return CLIENTS[MTLS_CLIENT_ID]["cert_pem"]
+
+
+def get_redirect_uris(client_id: str) -> list[str]:
+    client = get_client(client_id)
+    if not client:
+        return []
+    return list(client.get("redirect_uris") or [])
 
 
 def client_id_for_thumbprint(thumbprint: str) -> str | None:
