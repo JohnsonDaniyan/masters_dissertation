@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from app.config import settings
 from app.main import app
 from app.store import par_store
+from tests.auth_helpers import with_jwt
 
 client = TestClient(app)
 
@@ -40,12 +41,12 @@ def test_par_rejects_missing_parameters():
 
 def test_par_rejects_invalid_pkce_method():
     body = {**VALID_PAR, "code_challenge_method": "plain"}
-    resp = client.post("/par", data=body)
+    resp = client.post("/par", data=with_jwt(body))
     assert resp.status_code == 400
 
 
 def test_par_issues_request_uri():
-    resp = client.post("/par", data=VALID_PAR)
+    resp = client.post("/par", data=with_jwt(VALID_PAR))
     assert resp.status_code == 200
     payload = resp.json()
     assert payload["request_uri"].startswith("urn:ietf:params:oauth:request_uri:")
@@ -69,7 +70,7 @@ def test_authorize_rejects_unknown_request_uri():
 
 
 def test_authorize_accepts_valid_request_uri_once():
-    par = client.post("/par", data=VALID_PAR).json()
+    par = client.post("/par", data=with_jwt(VALID_PAR)).json()
     first = client.get(
         "/authorize",
         params={"client_id": VALID_PAR["client_id"], "request_uri": par["request_uri"]},
@@ -93,14 +94,14 @@ def test_par_enforced_false_allows_front_channel_bypass():
 
 def test_request_uri_reusable_allows_replay():
     settings.REQUEST_URI_REUSABLE = True
-    par = client.post("/par", data=VALID_PAR).json()
+    par = client.post("/par", data=with_jwt(VALID_PAR)).json()
     params = {"client_id": VALID_PAR["client_id"], "request_uri": par["request_uri"]}
     assert client.get("/authorize", params=params).status_code == 200
     assert client.get("/authorize", params=params).status_code == 200
 
 
 def test_request_uri_expires_by_default(monkeypatch):
-    par = client.post("/par", data=VALID_PAR).json()
+    par = client.post("/par", data=with_jwt(VALID_PAR)).json()
     now = time.time()
     monkeypatch.setattr(par_store.time, "time", lambda: now + 61)
     resp = client.get(
@@ -112,7 +113,7 @@ def test_request_uri_expires_by_default(monkeypatch):
 
 def test_request_uri_long_lived_does_not_expire(monkeypatch):
     settings.REQUEST_URI_LONG_LIVED = True
-    par = client.post("/par", data=VALID_PAR).json()
+    par = client.post("/par", data=with_jwt(VALID_PAR)).json()
     now = time.time()
     monkeypatch.setattr(par_store.time, "time", lambda: now + 61)
     resp = client.get(

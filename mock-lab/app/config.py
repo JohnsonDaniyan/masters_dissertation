@@ -24,4 +24,9 @@ class Settings:
     # Feature C toggles
     PKCE_ENFORCED: bool = os.getenv("PKCE_ENFORCED", "true").lower() == "true"
 
+    # Feature D toggles
+    JWT_REPLAY_PROTECTION: bool = os.getenv("JWT_REPLAY_PROTECTION", "true").lower() == "true"
+    MTLS_CLIENT_AUTH_ENFORCED: bool = os.getenv("MTLS_CLIENT_AUTH_ENFORCED", "true").lower() == "true"
+    ALLOW_WEAK_CLIENT_AUTH: bool = os.getenv("ALLOW_WEAK_CLIENT_AUTH", "false").lower() == "true"
+
 settings = Settings()

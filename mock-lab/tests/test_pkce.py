@@ -5,6 +5,7 @@ from app.config import settings
 from app.crypto.pkce import verify_pkce
 from app.main import app
 from app.store import code_store, par_store
+from tests.auth_helpers import with_jwt
 
 client = TestClient(app)
 
@@ -37,7 +38,7 @@ def reset_stores_and_toggles():
 
 
 def _issue_code(par_body: dict | None = None) -> str:
-    par = client.post("/par", data=par_body or VALID_PAR).json()
+    par = client.post("/par", data=with_jwt(par_body or VALID_PAR)).json()
     auth = client.get(
         "/authorize",
         params={
@@ -70,11 +71,14 @@ def test_token_succeeds_with_correct_code_verifier():
     code = _issue_code()
     resp = client.post(
         "/token",
-        data={
-            "grant_type": "authorization_code",
-            "code": code,
-            "code_verifier": CODE_VERIFIER,
-        },
+        data=with_jwt(
+            {
+                "grant_type": "authorization_code",
+                "code": code,
+                "client_id": VALID_PAR["client_id"],
+                "code_verifier": CODE_VERIFIER,
+            }
+        ),
     )
     assert resp.status_code == 200
     payload = resp.json()
@@ -86,11 +90,14 @@ def test_token_rejects_incorrect_code_verifier():
     code = _issue_code()
     resp = client.post(
         "/token",
-        data={
-            "grant_type": "authorization_code",
-            "code": code,
-            "code_verifier": "not-the-verifier",
-        },
+        data=with_jwt(
+            {
+                "grant_type": "authorization_code",
+                "code": code,
+                "client_id": VALID_PAR["client_id"],
+                "code_verifier": "not-the-verifier",
+            }
+        ),
     )
     assert resp.status_code == 400
     assert "PKCE" in resp.json()["detail"]
@@ -100,7 +107,13 @@ def test_token_requires_code_verifier_when_enforced():
     code = _issue_code()
     resp = client.post(
         "/token",
-        data={"grant_type": "authorization_code", "code": code},
+        data=with_jwt(
+            {
+                "grant_type": "authorization_code",
+                "code": code,
+                "client_id": VALID_PAR["client_id"],
+            }
+        ),
     )
     assert resp.status_code == 400
     assert "code_verifier" in resp.json()["detail"]
@@ -111,7 +124,13 @@ def test_pkce_enforced_false_allows_token_without_verifier():
     code = _issue_code()
     resp = client.post(
         "/token",
-        data={"grant_type": "authorization_code", "code": code},
+        data=with_jwt(
+            {
+                "grant_type": "authorization_code",
+                "code": code,
+                "client_id": VALID_PAR["client_id"],
+            }
+        ),
     )
     assert resp.status_code == 200
     assert "access_token" in resp.json()
@@ -127,11 +146,14 @@ def test_allow_plain_pkce_accepts_plain_method():
     code = _issue_code(plain_par)
     resp = client.post(
         "/token",
-        data={
-            "grant_type": "authorization_code",
-            "code": code,
-            "code_verifier": CODE_VERIFIER,
-        },
+        data=with_jwt(
+            {
+                "grant_type": "authorization_code",
+                "code": code,
+                "client_id": VALID_PAR["client_id"],
+                "code_verifier": CODE_VERIFIER,
+            }
+        ),
     )
     assert resp.status_code == 200
 
@@ -149,11 +171,14 @@ def test_plain_method_rejected_when_not_allowed():
     assert auth.status_code == 200
     resp = client.post(
         "/token",
-        data={
-            "grant_type": "authorization_code",
-            "code": auth.json()["code"],
-            "code_verifier": CODE_VERIFIER,
-        },
+        data=with_jwt(
+            {
+                "grant_type": "authorization_code",
+                "code": auth.json()["code"],
+                "client_id": VALID_PAR["client_id"],
+                "code_verifier": CODE_VERIFIER,
+            }
+        ),
     )
     assert resp.status_code == 400
     assert "plain" in resp.json()["detail"]
