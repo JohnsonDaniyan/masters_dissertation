@@ -21,4 +21,7 @@ class Settings:
     REQUEST_URI_LONG_LIVED: bool = os.getenv("REQUEST_URI_LONG_LIVED", "false").lower() == "true"
     ALLOW_PLAIN_PKCE: bool = os.getenv("ALLOW_PLAIN_PKCE", "false").lower() == "true"
 
+    # Feature C toggles
+    PKCE_ENFORCED: bool = os.getenv("PKCE_ENFORCED", "true").lower() == "true"
+
 settings = Settings()

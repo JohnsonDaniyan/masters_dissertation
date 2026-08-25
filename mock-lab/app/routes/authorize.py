@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 
 from app.config import settings
+from app.store.code_store import issue_code
 from app.store.par_store import consume_par_entry
 
 router = APIRouter()
@@ -48,7 +49,8 @@ def authorize(
                 status_code=400,
                 detail="invalid_request: client_id does not match request_uri",
             )
-        return {"status": "ok", "params": params}
+        code = issue_code(params)
+        return {"status": "ok", "code": code, "params": params}
 
     if settings.PAR_ENFORCED:
         raise HTTPException(
@@ -59,4 +61,5 @@ def authorize(
     params = _front_channel_params(
         client_id, redirect_uri, scope, code_challenge, code_challenge_method
     )
-    return {"status": "ok", "params": params}
+    code = issue_code(params)
+    return {"status": "ok", "code": code, "params": params}
