@@ -27,7 +27,7 @@ def metadata():
         "jwks_uri": f"{settings.BASE_URL}/jwks",
         "token_endpoint_auth_methods_supported": ["private_key_jwt", "tls_client_auth"],
         "dpop_signing_alg_values_supported": ["ES256"],
-        "require_pushed_authorization_requests": True,
+        "require_pushed_authorization_requests": settings.PAR_ENFORCED,
     }
 
     if settings.METADATA_INCOMPLETE:

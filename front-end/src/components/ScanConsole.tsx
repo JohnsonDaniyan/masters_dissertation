@@ -84,7 +84,7 @@ export default function ScanConsole() {
     if (report.summary.error > 0) {
       return "The instrument could not complete every check against this specimen.";
     }
-    return "The specimen satisfies the discovery checks in the present catalogue.";
+    return "The specimen satisfies the discovery and PAR checks in the present catalogue.";
   }, [report]);
 
   return (
@@ -92,15 +92,15 @@ export default function ScanConsole() {
       <header className="running-head">
         <span>FAPI Lens</span>
         <span>Working paper · visual instrument</span>
-        <span>Discovery conformance</span>
+        <span>Discovery and PAR conformance</span>
       </header>
 
       <article className="paper">
-        <p className="journal">Journal of Applied Protocol Security — draft interface</p>
-        <h1>FAPI Lens</h1>
+        
+        <h1>Automated Adversarial Testing of FAPI 2.0 Security Profile Conformance in Financial API Implementations</h1>
         <p className="subtitle">
           A visual instrument for presenting FAPI 2.0 Security Profile discovery
-          findings against a live authorisation server
+          and pushed-authorisation findings against a live authorisation server
         </p>
         <p className="byline">
           Master’s project interface · black-box adversarial testing of
@@ -114,10 +114,13 @@ export default function ScanConsole() {
             structured results in the register of a short research note.
             Discovery-time checks—metadata reachability, issuer identifier
             format, and the advertisement of pushed authorisation requests—are
-            run against a nominated authorisation server. The checks map onto
-            preconditions identified by Hosseyni, Küsters and Würtele (2025) for
-            attacker token injection and client impersonation when clients
-            cannot obtain a verified metadata document.
+            followed by live probes of POST /par and GET /authorize. Those
+            probes ask whether incomplete PAR requests are rejected, whether
+            the front channel can bypass PAR, and whether a request_uri can be
+            replayed. The discovery checks map onto preconditions identified by
+            Hosseyni, Küsters and Würtele (2025) for attacker token injection
+            and client impersonation when clients cannot obtain a verified
+            metadata document.
           </p>
         </section>
 
@@ -126,11 +129,14 @@ export default function ScanConsole() {
             <span>1.</span> Method
           </h2>
           <p>
-            The instrument issues a single request to the RFC 8414 well-known
-            path and evaluates the response against three independent
-            propositions. Failures are treated as evidence of non-conformance;
-            transport errors are reported separately so that an unreachable
-            host is not conflated with a malformed document.
+            The instrument first fetches the RFC 8414 well-known document, then
+            exercises the advertised PAR and authorization endpoints. Each row
+            in the catalogue is an independent proposition. Failures are treated
+            as evidence of non-conformance; transport errors are reported
+            separately so that an unreachable host is not conflated with a
+            malformed document. A PAR bypass (authorize without request_uri) or
+            a reusable request_uri is reported as a finding, not as a lab
+            convenience.
           </p>
           <table className="catalogue">
             <caption>Table 1. Check catalogue</caption>
@@ -250,8 +256,9 @@ export default function ScanConsole() {
             </li>
             <li>
               OpenID Foundation, FAPI 2.0 Security Profile. Conformance here is
-              limited to the advertised discovery surface and should not be read
-              as a certification result.
+              limited to the advertised discovery surface and the PAR
+              front-channel probes in the catalogue, and should not be read as a
+              certification result.
             </li>
           </ol>
         </footer>

@@ -17,4 +17,22 @@ CHECKS = [
         "description": "Confirms pushed authorisation requests are advertised as required by FAPI 2.0.",
         "reference": "RFC 9126 PAR; FAPI 2.0 require_pushed_authorization_requests.",
     },
+    {
+        "check_id": "PAR-001",
+        "title": "PAR parameter validation",
+        "description": "Checks that POST /par rejects missing or invalid parameters and issues a request_uri for a well-formed request.",
+        "reference": "RFC 9126 Pushed Authorization Requests; FAPI 2.0 Security Profile.",
+    },
+    {
+        "check_id": "PAR-002",
+        "title": "Authorization requires request_uri",
+        "description": "Verifies GET /authorize rejects front-channel parameters and unknown request_uri values, and accepts a freshly issued request_uri.",
+        "reference": "RFC 9126 Pushed Authorization Requests; FAPI 2.0 require_pushed_authorization_requests.",
+    },
+    {
+        "check_id": "PAR-003",
+        "title": "request_uri is single-use",
+        "description": "Confirms that a request_uri cannot be replayed at the authorization endpoint.",
+        "reference": "RFC 9126 §2.2 — request_uri must be single-use unless explicitly advertised otherwise.",
+    },
 ]

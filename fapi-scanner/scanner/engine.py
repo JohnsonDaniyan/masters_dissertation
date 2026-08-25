@@ -5,6 +5,13 @@ from scanner.discovery.issuer_check import evaluate_issuer_identifier
 from scanner.discovery.metadata_check import evaluate_metadata_reachable
 from scanner.discovery.metadata_fetch import fetch_metadata, normalise_base_url
 from scanner.discovery.par_check import evaluate_par_advertised
+from scanner.discovery.par_enforcement import (
+    evaluate_authorize_requires_request_uri,
+    evaluate_par_rejects_invalid,
+    evaluate_request_uri_single_use,
+)
+
+
 def run_scan(target: str) -> dict:
     base_url = normalise_base_url(target)
     started = datetime.now(timezone.utc)
@@ -14,6 +21,9 @@ def run_scan(target: str) -> dict:
         evaluate_metadata_reachable(fetched),
         evaluate_issuer_identifier(fetched),
         evaluate_par_advertised(fetched),
+        evaluate_par_rejects_invalid(base_url, fetched),
+        evaluate_authorize_requires_request_uri(base_url, fetched),
+        evaluate_request_uri_single_use(base_url, fetched),
     ]
 
     counts = {
