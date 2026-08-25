@@ -11,6 +11,7 @@ from cryptography.x509.oid import NameOID
 
 TEST_CLIENT_ID = "test-client"
 MTLS_CLIENT_ID = "mtls-client"
+RS_CLIENT_ID = "mock-rs"
 TEST_CLIENT_SECRET = "test-secret"
 
 
@@ -44,6 +45,7 @@ def cert_pem(cert: x509.Certificate) -> str:
 
 _jwt_key = _rsa_key()
 _mtls_key = _rsa_key()
+_rs_key = _rsa_key()
 _mtls_cert = _self_signed_cert(_mtls_key, MTLS_CLIENT_ID)
 _unregistered_key = _rsa_key()
 UNREGISTERED_CERT_PEM = cert_pem(_self_signed_cert(_unregistered_key, "unregistered"))
@@ -62,6 +64,13 @@ CLIENTS: dict[str, dict] = {
         "client_secret": None,
         "cert_thumbprint": cert_sha256_thumbprint(_mtls_cert),
         "cert_pem": cert_pem(_mtls_cert),
+    },
+    RS_CLIENT_ID: {
+        "private_key": _rs_key,
+        "public_key": _rs_key.public_key(),
+        "client_secret": None,
+        "cert_thumbprint": None,
+        "cert_pem": None,
     },
 }
 

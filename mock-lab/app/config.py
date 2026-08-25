@@ -34,4 +34,9 @@ class Settings:
     DPOP_REPLAY_PROTECTION: bool = os.getenv("DPOP_REPLAY_PROTECTION", "true").lower() == "true"
     MTLS_BINDING_ENFORCED: bool = os.getenv("MTLS_BINDING_ENFORCED", "true").lower() == "true"
 
+    # Feature F toggles
+    TOKEN_UNSTRUCTURED: bool = os.getenv("TOKEN_UNSTRUCTURED", "false").lower() == "true"
+    INTROSPECTION_AUTH_REQUIRED: bool = os.getenv("INTROSPECTION_AUTH_REQUIRED", "true").lower() == "true"
+    RS_TRUSTS_AS_BLINDLY: bool = os.getenv("RS_TRUSTS_AS_BLINDLY", "false").lower() == "true"
+
 settings = Settings()

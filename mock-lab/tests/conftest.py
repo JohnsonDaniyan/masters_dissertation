@@ -17,6 +17,9 @@ def reset_client_auth_state():
     settings.DPOP_VALIDATION_STRICT = True
     settings.DPOP_REPLAY_PROTECTION = True
     settings.MTLS_BINDING_ENFORCED = True
+    settings.TOKEN_UNSTRUCTURED = False
+    settings.INTROSPECTION_AUTH_REQUIRED = True
+    settings.RS_TRUSTS_AS_BLINDLY = False
     yield
     jti_store.clear()
     nonce_store.clear()
@@ -27,3 +30,6 @@ def reset_client_auth_state():
     settings.DPOP_VALIDATION_STRICT = True
     settings.DPOP_REPLAY_PROTECTION = True
     settings.MTLS_BINDING_ENFORCED = True
+    settings.TOKEN_UNSTRUCTURED = False
+    settings.INTROSPECTION_AUTH_REQUIRED = True
+    settings.RS_TRUSTS_AS_BLINDLY = False

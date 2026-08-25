@@ -8,7 +8,7 @@ from app.dpop.nonce_store import issue_nonce
 from app.dpop.proof import consume_proof_jti, validate_dpop_proof
 from app.mtls.binding import presented_x5t_s256
 from app.store.code_store import consume_code
-from app.store.token_store import issue_access_token
+from app.tokens.issuer import issue_access_token
 
 router = APIRouter()
 
