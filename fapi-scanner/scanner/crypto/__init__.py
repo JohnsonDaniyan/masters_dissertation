@@ -1,0 +1,1 @@
+from scanner.crypto.assertion_builder import build_client_assertion

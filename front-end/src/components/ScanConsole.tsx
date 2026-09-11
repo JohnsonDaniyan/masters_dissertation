@@ -84,7 +84,7 @@ export default function ScanConsole() {
     if (report.summary.error > 0) {
       return "The instrument could not complete every check against this specimen.";
     }
-    return "The specimen satisfies the discovery and PAR checks in the present catalogue.";
+    return "The specimen satisfies the FAPI 2.0 checks in the present catalogue.";
   }, [report]);
 
   return (
@@ -114,13 +114,12 @@ export default function ScanConsole() {
             structured results in the register of a short research note.
             Discovery-time checks—metadata reachability, issuer identifier
             format, and the advertisement of pushed authorisation requests—are
-            followed by live probes of POST /par and GET /authorize. Those
-            probes ask whether incomplete PAR requests are rejected, whether
-            the front channel can bypass PAR, and whether a request_uri can be
-            replayed. The discovery checks map onto preconditions identified by
-            Hosseyni, Küsters and Würtele (2025) for attacker token injection
-            and client impersonation when clients cannot obtain a verified
-            metadata document.
+            followed by live probes of PAR, PKCE, client authentication, DPoP,
+            resource-server binding, authorization-response integrity, and
+            dynamic client registration. Those probes map onto preconditions
+            identified by Hosseyni, Küsters and Würtele (2025), including
+            attacker token injection, DPoP proof replay, and the Cuckoo’s Token
+            attack.
           </p>
         </section>
 

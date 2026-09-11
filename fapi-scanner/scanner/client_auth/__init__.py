@@ -1,0 +1,3 @@
+from scanner.client_auth.jwt_replay_check import check_client_assertion_replay
+from scanner.client_auth.mtls_bypass_check import check_mtls_bypass
+from scanner.client_auth.weak_auth_check import check_weak_client_auth

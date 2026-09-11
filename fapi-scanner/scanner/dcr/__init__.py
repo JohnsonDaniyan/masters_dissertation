@@ -1,0 +1,2 @@
+from scanner.dcr.open_registration_check import check_open_registration
+from scanner.dcr.unauth_update_check import check_unauthenticated_update

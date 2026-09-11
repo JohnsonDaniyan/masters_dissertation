@@ -3,8 +3,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-print("meta shit"+ str(os.getenv("METADATA_ENABLED")))
-
 class Settings:
     ISSUER: str = os.getenv("ISSUER", "https://mock-as.local")
     BASE_URL: str = os.getenv("BASE_URL", "https://mock-as.local")
@@ -43,5 +41,10 @@ class Settings:
     ISS_PARAM_OMITTED: bool = os.getenv("ISS_PARAM_OMITTED", "false").lower() == "true"
     JARM_SIGNATURE_CHECK: bool = os.getenv("JARM_SIGNATURE_CHECK", "true").lower() == "true"
     REDIRECT_URI_LOOSE_MATCH: bool = os.getenv("REDIRECT_URI_LOOSE_MATCH", "false").lower() == "true"
+
+    # Feature H toggles
+    DCR_OPEN_REGISTRATION: bool = os.getenv("DCR_OPEN_REGISTRATION", "false").lower() == "true"
+    DCM_AUTH_REQUIRED: bool = os.getenv("DCM_AUTH_REQUIRED", "true").lower() == "true"
+    INITIAL_ACCESS_TOKEN: str = os.getenv("INITIAL_ACCESS_TOKEN", "lab-initial-access-token")
 
 settings = Settings()

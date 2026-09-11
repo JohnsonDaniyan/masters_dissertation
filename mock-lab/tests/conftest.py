@@ -3,6 +3,7 @@ import pytest
 from app.auth import jti_store
 from app.config import settings
 from app.dpop import nonce_store
+from app.registry.clients import clear_dynamic_clients
 from app.store import token_store
 
 
@@ -11,6 +12,7 @@ def reset_client_auth_state():
     jti_store.clear()
     nonce_store.clear()
     token_store.clear()
+    clear_dynamic_clients()
     settings.JWT_REPLAY_PROTECTION = True
     settings.MTLS_CLIENT_AUTH_ENFORCED = True
     settings.ALLOW_WEAK_CLIENT_AUTH = False
@@ -23,10 +25,13 @@ def reset_client_auth_state():
     settings.ISS_PARAM_OMITTED = False
     settings.JARM_SIGNATURE_CHECK = True
     settings.REDIRECT_URI_LOOSE_MATCH = False
+    settings.DCR_OPEN_REGISTRATION = False
+    settings.DCM_AUTH_REQUIRED = True
     yield
     jti_store.clear()
     nonce_store.clear()
     token_store.clear()
+    clear_dynamic_clients()
     settings.JWT_REPLAY_PROTECTION = True
     settings.MTLS_CLIENT_AUTH_ENFORCED = True
     settings.ALLOW_WEAK_CLIENT_AUTH = False
@@ -39,3 +44,5 @@ def reset_client_auth_state():
     settings.ISS_PARAM_OMITTED = False
     settings.JARM_SIGNATURE_CHECK = True
     settings.REDIRECT_URI_LOOSE_MATCH = False
+    settings.DCR_OPEN_REGISTRATION = False
+    settings.DCM_AUTH_REQUIRED = True

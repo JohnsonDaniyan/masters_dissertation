@@ -1,0 +1,2 @@
+from scanner.token_resource.introspection_auth_check import check_introspection_auth
+from scanner.token_resource.rs_binding_check import check_rs_binding_enforcement

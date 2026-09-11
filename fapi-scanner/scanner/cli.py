@@ -1,25 +1,11 @@
 import click
 
-from scanner.discovery.metadata_check import check_metadata_reachable
 from scanner.engine import run_scan
 
 
-@click.group(invoke_without_command=True)
-@click.option("--target", help="Base URL of the AS under test")
-@click.pass_context
-def cli(ctx, target):
-    if ctx.invoked_subcommand is not None:
-        return
-    if not target:
-        raise click.UsageError("Missing option '--target'")
-    result = check_metadata_reachable(target)
-    click.echo(f"[{result.status.value.upper()}] {result.check_id} — {result.description}")
-    click.echo(f"  {result.detail}")
-
-
-@cli.command("scan-all")
+@click.command()
 @click.option("--target", required=True, help="Base URL of the AS under test")
-def scan_all(target):
+def scan(target):
     report = run_scan(target)
     summary = report["summary"]
     click.echo(
@@ -31,9 +17,9 @@ def scan_all(target):
         click.echo(f"  {result['detail']}")
 
 
-def scan():
-    cli()
+def cli():
+    scan()
 
 
 if __name__ == "__main__":
-    cli()
+    scan()

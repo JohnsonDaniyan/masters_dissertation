@@ -29,6 +29,7 @@ def metadata():
         "dpop_signing_alg_values_supported": ["ES256"],
         "authorization_response_iss_parameter_supported": not settings.ISS_PARAM_OMITTED,
         "authorization_signing_alg_values_supported": ["ES256"],
+        "registration_endpoint": f"{settings.BASE_URL}/register",
         "require_pushed_authorization_requests": settings.PAR_ENFORCED,
     }
 

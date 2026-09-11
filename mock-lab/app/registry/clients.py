@@ -3,16 +3,21 @@ from __future__ import annotations
 import datetime
 import hashlib
 import hmac
+import secrets
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
+from app.dpop.jwk import jwk_to_public_key
+
 TEST_CLIENT_ID = "test-client"
 MTLS_CLIENT_ID = "mtls-client"
 RS_CLIENT_ID = "mock-rs"
 TEST_CLIENT_SECRET = "test-secret"
+
+_DYNAMIC_IDS: set[str] = set()
 
 
 def _rsa_key():
@@ -58,6 +63,8 @@ CLIENTS: dict[str, dict] = {
         "cert_thumbprint": None,
         "cert_pem": None,
         "redirect_uris": ["https://client.example/callback"],
+        "registration_access_token": None,
+        "jwks": None,
     },
     MTLS_CLIENT_ID: {
         "private_key": None,
@@ -66,6 +73,8 @@ CLIENTS: dict[str, dict] = {
         "cert_thumbprint": cert_sha256_thumbprint(_mtls_cert),
         "cert_pem": cert_pem(_mtls_cert),
         "redirect_uris": ["https://client.example/callback"],
+        "registration_access_token": None,
+        "jwks": None,
     },
     RS_CLIENT_ID: {
         "private_key": _rs_key,
@@ -74,6 +83,8 @@ CLIENTS: dict[str, dict] = {
         "cert_thumbprint": None,
         "cert_pem": None,
         "redirect_uris": [],
+        "registration_access_token": None,
+        "jwks": None,
     },
 }
 
@@ -126,3 +137,79 @@ def verify_client_secret(client_id: str | None, secret: str | None) -> bool:
     if not expected:
         return False
     return hmac.compare_digest(expected, secret)
+
+
+def clear_dynamic_clients() -> None:
+    for client_id in list(_DYNAMIC_IDS):
+        CLIENTS.pop(client_id, None)
+    _DYNAMIC_IDS.clear()
+
+
+def _apply_crypto(entry: dict, payload: dict) -> None:
+    jwks = payload.get("jwks")
+    if jwks and isinstance(jwks, dict) and jwks.get("keys"):
+        entry["jwks"] = jwks
+        try:
+            entry["public_key"] = jwk_to_public_key(jwks["keys"][0])
+        except Exception:
+            entry["public_key"] = None
+    if payload.get("tls_client_certificate"):
+        pem = payload["tls_client_certificate"]
+        cert = x509.load_pem_x509_certificate(pem.encode())
+        entry["cert_pem"] = cert_pem(cert)
+        entry["cert_thumbprint"] = cert_sha256_thumbprint(cert)
+    if payload.get("cert_thumbprint"):
+        entry["cert_thumbprint"] = payload["cert_thumbprint"]
+
+
+def _public_view(client_id: str, client: dict) -> dict:
+    return {
+        "client_id": client_id,
+        "redirect_uris": list(client.get("redirect_uris") or []),
+        "jwks": client.get("jwks"),
+        "cert_thumbprint": client.get("cert_thumbprint"),
+        "token_endpoint_auth_method": client.get("token_endpoint_auth_method"),
+        "registration_access_token": client.get("registration_access_token"),
+        "registration_client_uri": f"/register/{client_id}",
+    }
+
+
+def register_client(payload: dict) -> dict:
+    client_id = f"dcr-{secrets.token_urlsafe(12)}"
+    entry = {
+        "private_key": None,
+        "public_key": None,
+        "client_secret": None,
+        "cert_thumbprint": None,
+        "cert_pem": None,
+        "redirect_uris": list(payload.get("redirect_uris") or []),
+        "jwks": None,
+        "token_endpoint_auth_method": payload.get(
+            "token_endpoint_auth_method", "private_key_jwt"
+        ),
+        "registration_access_token": secrets.token_urlsafe(32),
+    }
+    _apply_crypto(entry, payload)
+    CLIENTS[client_id] = entry
+    _DYNAMIC_IDS.add(client_id)
+    return _public_view(client_id, entry)
+
+
+def update_client(client_id: str, payload: dict) -> dict:
+    client = get_client(client_id)
+    if client is None:
+        raise KeyError(client_id)
+    if "redirect_uris" in payload:
+        client["redirect_uris"] = list(payload.get("redirect_uris") or [])
+    if "token_endpoint_auth_method" in payload:
+        client["token_endpoint_auth_method"] = payload["token_endpoint_auth_method"]
+    _apply_crypto(client, payload)
+    return _public_view(client_id, client)
+
+
+def registration_access_token_matches(client_id: str, token: str | None) -> bool:
+    client = get_client(client_id)
+    expected = client.get("registration_access_token") if client else None
+    if not expected or not token:
+        return False
+    return hmac.compare_digest(expected, token)
