@@ -20,9 +20,8 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FAPI Lens — A Visual Instrument for FAPI 2.0 Discovery Conformance",
-  description:
-    "Academic presentation of FAPI 2.0 adversarial scanner findings for authorisation-server discovery checks.",
+  title: "FAPI Lens",
+  description: "FAPI 2.0 authorisation-server scan.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
