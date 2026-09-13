@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import MockLabCard from "@/components/MockLabCard";
 import { runScan } from "@/lib/api";
 import type { CheckStatus, ScanReport, TestResult } from "@/lib/types";
 
@@ -106,8 +107,10 @@ export default function ScanConsole() {
         <span>FAPI 2.0</span>
       </header>
 
-      <article className="paper">
-        <h1>Authorisation-server scan</h1>
+      <div className="workspace">
+        <MockLabCard />
+        <article className="paper">
+          <h1>Authorisation-server scan</h1>
 
         <form className="specimen" onSubmit={onSubmit}>
           <label htmlFor="target" className="sr-only">
@@ -151,6 +154,7 @@ export default function ScanConsole() {
           </section>
         ) : null}
       </article>
+      </div>
     </div>
   );
 }
