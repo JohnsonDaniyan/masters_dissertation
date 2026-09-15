@@ -208,13 +208,47 @@ section {
   margin-top: 2.4rem;
 }
 
-section > h2 {
+section > h2,
+.section-head h2 {
   margin: 0 0 0.85rem;
   padding-bottom: 0.35rem;
   border-bottom: 1px solid var(--rule);
   font-family: var(--font-display), Georgia, serif;
   font-size: 1.35rem;
   font-weight: 600;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.section-head h2 {
+  flex: 1;
+}
+
+.text-action {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 0.28rem 0.75rem;
+  cursor: pointer;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.text-action:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--sheet);
+}
+
+.text-action:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 section > h2 span {

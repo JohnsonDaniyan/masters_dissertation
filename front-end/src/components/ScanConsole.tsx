@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import MockLabCard from "@/components/MockLabCard";
-import { runScan } from "@/lib/api";
+import { downloadScanPdf, runScan } from "@/lib/api";
 import type { CheckStatus, ScanReport, TestResult } from "@/lib/types";
 
 const DEFAULT_TARGET = "http://127.0.0.1:8000";
@@ -65,6 +65,7 @@ export default function ScanConsole() {
   const [report, setReport] = useState<ScanReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
 
   useEffect(() => {
@@ -90,6 +91,19 @@ export default function ScanConsole() {
       setError(err instanceof Error ? err.message : "Scan failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onDownloadPdf() {
+    if (!report || downloading) return;
+    setDownloading(true);
+    setError(null);
+    try {
+      await downloadScanPdf(report);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not download the PDF report");
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -140,7 +154,12 @@ export default function ScanConsole() {
 
         {report ? (
           <section>
-            <h2>Findings</h2>
+            <div className="section-head">
+              <h2>Findings</h2>
+              <button type="button" className="text-action" onClick={onDownloadPdf} disabled={downloading}>
+                {downloading ? "Preparing PDF…" : "Download PDF"}
+              </button>
+            </div>
             <p className="lead-finding">
               {verdict}
               <span className="summary-inline">

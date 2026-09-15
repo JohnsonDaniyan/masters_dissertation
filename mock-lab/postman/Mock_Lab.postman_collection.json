@@ -1,0 +1,757 @@
+{
+  "info": {
+    "name": "Mock Open Banking Lab",
+    "description": "Requests for the mock Open Banking authorization server (`mock-lab`, default `http://127.0.0.1:8000`).\n\n**Import** this collection and `Mock_Lab.postman_environment.json`.\n\n**Client auth in Postman.** Seeded `private_key_jwt` keys are generated at process start and are not exported. The happy-path folder therefore turns on `ALLOW_WEAK_CLIENT_AUTH` and uses `test-client` / `test-secret`. Reset the lab when you are done.\n\n**PKCE** uses the RFC 7636 appendix B verifier/challenge pair (same values as `mock-lab/tests/test_pkce.py`).\n\n**Resources.** Access tokens issued without DPoP or mTLS have an empty `cnf`. `/accounts` and friends fail sender-constraint checks unless `RS_TRUSTS_AS_BLINDLY` is enabled. The happy-path folder sets that toggle before calling the resource APIs.\n\n**Collection runner.** Run folders in order: Lab control → Happy path. End with Reset lab config.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "request_uri", "value": "" },
+    { "key": "auth_code", "value": "" },
+    { "key": "access_token", "value": "" },
+    { "key": "dcr_client_id", "value": "" },
+    { "key": "registration_access_token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Lab control",
+      "item": [
+        {
+          "name": "Get lab config",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 and toggles object', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.toggles).to.be.an('object');",
+                  "  pm.expect(body.toggles).to.have.property('METADATA_ENABLED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/lab/config"
+          }
+        },
+        {
+          "name": "Reload lab config from .env",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().toggles).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/lab/reload"
+          }
+        },
+        {
+          "name": "Patch toggle — ALLOW_WEAK_CLIENT_AUTH true",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('toggle applied', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().toggles.ALLOW_WEAK_CLIENT_AUTH).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"ALLOW_WEAK_CLIENT_AUTH\",\n  \"value\": true\n}"
+            },
+            "url": "{{baseUrl}}/lab/config"
+          }
+        },
+        {
+          "name": "Patch toggle — RS_TRUSTS_AS_BLINDLY true",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('toggle applied', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().toggles.RS_TRUSTS_AS_BLINDLY).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"RS_TRUSTS_AS_BLINDLY\",\n  \"value\": true\n}"
+            },
+            "url": "{{baseUrl}}/lab/config"
+          }
+        },
+        {
+          "name": "Patch toggle — PAR_ENFORCED false",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"PAR_ENFORCED\",\n  \"value\": false\n}"
+            },
+            "url": "{{baseUrl}}/lab/config"
+          }
+        },
+        {
+          "name": "Patch toggle — unknown key (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 unknown toggle', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(pm.response.json().detail).to.include('Unknown toggle');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"NOT_A_TOGGLE\",\n  \"value\": true\n}"
+            },
+            "url": "{{baseUrl}}/lab/config"
+          }
+        },
+        {
+          "name": "Reset lab config",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/lab/config/reset"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discovery",
+      "item": [
+        {
+          "name": "Authorization server metadata",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 metadata', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.issuer).to.be.a('string');",
+                  "  pm.expect(body.authorization_endpoint).to.include('/authorize');",
+                  "  pm.expect(body.token_endpoint).to.include('/token');",
+                  "  pm.expect(body.jwks_uri).to.include('/jwks');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/.well-known/oauth-authorization-server"
+          }
+        },
+        {
+          "name": "JWKS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 keys', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.keys).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body.keys[0].kty).to.eql('EC');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/jwks"
+          }
+        },
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/openapi.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dynamic client registration",
+      "item": [
+        {
+          "name": "Register without initial access token (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  pm.expect(pm.response.json().detail).to.include('initial access token');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"redirect_uris\": [\"https://dcr.example/callback\"],\n  \"token_endpoint_auth_method\": \"private_key_jwt\"\n}"
+            },
+            "url": "{{baseUrl}}/register"
+          }
+        },
+        {
+          "name": "Register with initial access token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 registered client', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.client_id).to.match(/^dcr-/);",
+                  "  pm.expect(body.registration_access_token).to.be.a('string').that.is.not.empty;",
+                  "  pm.collectionVariables.set('dcr_client_id', body.client_id);",
+                  "  pm.collectionVariables.set('registration_access_token', body.registration_access_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{initial_access_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"redirect_uris\": [\"https://dcr.example/callback\"],\n  \"token_endpoint_auth_method\": \"private_key_jwt\"\n}"
+            },
+            "url": "{{baseUrl}}/register"
+          }
+        },
+        {
+          "name": "Update client without registration access token (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"redirect_uris\": [\"https://dcr.example/new\"]\n}"
+            },
+            "url": "{{baseUrl}}/register/{{dcr_client_id}}"
+          }
+        },
+        {
+          "name": "Update client with registration access token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 updated', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().redirect_uris).to.include('https://dcr.example/new');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{registration_access_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"redirect_uris\": [\"https://dcr.example/new\"]\n}"
+            },
+            "url": "{{baseUrl}}/register/{{dcr_client_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Happy path (PAR → token → resource)",
+      "description": "Run this folder top to bottom. It enables client-secret auth and RS blind trust so Postman can complete the flow without signing JWTs or DPoP proofs. Reset lab config afterwards.",
+      "item": [
+        {
+          "name": "1. Enable ALLOW_WEAK_CLIENT_AUTH",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('weak client auth on', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().toggles.ALLOW_WEAK_CLIENT_AUTH).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"ALLOW_WEAK_CLIENT_AUTH\",\n  \"value\": true\n}"
+            },
+            "url": "{{baseUrl}}/lab/config"
+          }
+        },
+        {
+          "name": "2. Enable RS_TRUSTS_AS_BLINDLY",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('RS blind trust on', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().toggles.RS_TRUSTS_AS_BLINDLY).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"RS_TRUSTS_AS_BLINDLY\",\n  \"value\": true\n}"
+            },
+            "url": "{{baseUrl}}/lab/config"
+          }
+        },
+        {
+          "name": "3. PAR (client secret)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('PAR issued', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.request_uri).to.include('urn:ietf:params:oauth:request_uri:');",
+                  "  pm.expect(body.expires_in).to.be.a('number');",
+                  "  pm.collectionVariables.set('request_uri', body.request_uri);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "client_id", "value": "{{client_id}}" },
+                { "key": "client_secret", "value": "{{client_secret}}" },
+                { "key": "redirect_uri", "value": "{{redirect_uri}}" },
+                { "key": "scope", "value": "{{scope}}" },
+                { "key": "code_challenge", "value": "{{code_challenge}}" },
+                { "key": "code_challenge_method", "value": "S256" }
+              ]
+            },
+            "url": "{{baseUrl}}/par"
+          }
+        },
+        {
+          "name": "4. Authorize with request_uri",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('authorization code issued', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.status).to.eql('ok');",
+                  "  pm.expect(body.code).to.be.a('string').that.is.not.empty;",
+                  "  pm.expect(body.redirect).to.include(pm.environment.get('redirect_uri'));",
+                  "  pm.collectionVariables.set('auth_code', body.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/authorize?client_id={{client_id}}&request_uri={{request_uri}}"
+          }
+        },
+        {
+          "name": "5. Token (authorization_code + PKCE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('access token issued', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.access_token).to.be.a('string').that.is.not.empty;",
+                  "  pm.expect(body.token_type).to.eql('Bearer');",
+                  "  pm.collectionVariables.set('access_token', body.access_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "authorization_code" },
+                { "key": "code", "value": "{{auth_code}}" },
+                { "key": "redirect_uri", "value": "{{redirect_uri}}" },
+                { "key": "client_id", "value": "{{client_id}}" },
+                { "key": "client_secret", "value": "{{client_secret}}" },
+                { "key": "code_verifier", "value": "{{code_verifier}}" }
+              ]
+            },
+            "url": "{{baseUrl}}/token"
+          }
+        },
+        {
+          "name": "6. Introspect token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('active token', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.active).to.eql(true);",
+                  "  pm.expect(body.client_id).to.eql(pm.environment.get('client_id'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "token", "value": "{{access_token}}" },
+                { "key": "token_type_hint", "value": "access_token" },
+                { "key": "client_id", "value": "{{client_id}}" },
+                { "key": "client_secret", "value": "{{client_secret}}" }
+              ]
+            },
+            "url": "{{baseUrl}}/introspect"
+          }
+        },
+        {
+          "name": "7. GET /resource",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('resource ok', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/resource"
+          }
+        },
+        {
+          "name": "8. GET /accounts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('accounts', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.accounts).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body.accounts[0].account_id).to.eql('acc-001');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/accounts"
+          }
+        },
+        {
+          "name": "9. GET /transactions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('transactions', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().transactions).to.be.an('array').that.is.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/transactions"
+          }
+        },
+        {
+          "name": "10. Reset lab config",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/lab/config/reset"
+          }
+        }
+      ]
+    },
+    {
+      "name": "OAuth negative cases",
+      "item": [
+        {
+          "name": "Authorize without request_uri (PAR enforced, expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 request_uri required', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(String(pm.response.json().detail)).to.include('request_uri');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/authorize?client_id={{client_id}}&redirect_uri={{redirect_uri}}&scope={{scope}}&code_challenge={{code_challenge}}&code_challenge_method=S256"
+          }
+        },
+        {
+          "name": "PAR without client auth (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 client auth required', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "client_id", "value": "{{client_id}}" },
+                { "key": "redirect_uri", "value": "{{redirect_uri}}" },
+                { "key": "scope", "value": "{{scope}}" },
+                { "key": "code_challenge", "value": "{{code_challenge}}" },
+                { "key": "code_challenge_method", "value": "S256" }
+              ]
+            },
+            "url": "{{baseUrl}}/par"
+          }
+        },
+        {
+          "name": "Token with unsupported grant (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 unsupported_grant_type', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(String(pm.response.json().detail)).to.include('unsupported_grant_type');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials" },
+                { "key": "code", "value": "unused" },
+                { "key": "client_id", "value": "{{client_id}}" },
+                { "key": "client_secret", "value": "{{client_secret}}" }
+              ]
+            },
+            "url": "{{baseUrl}}/token"
+          }
+        },
+        {
+          "name": "GET /accounts without token (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/accounts"
+          }
+        },
+        {
+          "name": "Front-channel authorize (after PAR_ENFORCED false)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Run Lab control → Patch toggle — PAR_ENFORCED false first. Then this issues a code without PAR.",
+            "url": "{{baseUrl}}/authorize?client_id={{client_id}}&redirect_uri={{redirect_uri}}&scope={{scope}}&code_challenge={{code_challenge}}&code_challenge_method=S256"
+          }
+        }
+      ]
+    }
+  ]
+}

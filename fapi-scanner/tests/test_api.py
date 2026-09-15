@@ -55,3 +55,26 @@ def test_scan_uses_fake_lab(monkeypatch):
     assert body["summary"]["pass"] == 20
     assert body["summary"]["fail"] == 0
     assert {item["check_id"] for item in body["results"]} == EXPECTED_IDS
+
+
+def test_report_pdf_from_scan_payload(monkeypatch):
+    FakeLab().install(monkeypatch)
+    monkeypatch.setattr("scanner.engine.fetch_metadata", lambda target: FETCHED)
+
+    scan = client.post("/api/v1/scan", json={"target": "http://as.example"})
+    response = client.post("/api/v1/report/pdf", json=scan.json())
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/pdf")
+    assert "fapi-scan-as.example.pdf" in response.headers["content-disposition"]
+    assert response.content.startswith(b"%PDF-")
+    assert b"FAPI" in response.content or len(response.content) > 500
+
+
+def test_scan_pdf_runs_checks(monkeypatch):
+    FakeLab().install(monkeypatch)
+    monkeypatch.setattr("scanner.engine.fetch_metadata", lambda target: FETCHED)
+
+    response = client.post("/api/v1/scan/pdf", json={"target": "https://as.example"})
+    assert response.status_code == 200
+    assert response.content.startswith(b"%PDF-")
+    assert "attachment" in response.headers["content-disposition"]

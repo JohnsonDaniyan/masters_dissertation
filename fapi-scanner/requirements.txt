@@ -2,6 +2,7 @@ click
 fastapi
 httpx
 pydantic
+reportlab
 uvicorn[standard]
 PyJWT[crypto]
 cryptography
