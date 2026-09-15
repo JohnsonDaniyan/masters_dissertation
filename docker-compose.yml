@@ -1,0 +1,46 @@
+name: fapi-lens
+
+services:
+  mock-lab:
+    build: ./mock-lab
+    ports:
+      - "8000:8000"
+    environment:
+      MOCK_LAB_ENV_PATH: /shared-env/.env
+    volumes:
+      - lab-env:/shared-env
+    restart: unless-stopped
+
+  scanner:
+    build: ./fapi-scanner
+    ports:
+      - "8080:8080"
+    environment:
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      SCAN_LOCALHOST_REWRITE: http://mock-lab:8000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      mock-lab:
+        condition: service_healthy
+    restart: unless-stopped
+
+  front-end:
+    build: ./front-end
+    ports:
+      - "3000:3000"
+    environment:
+      SCANNER_API_URL: http://scanner:8080
+      MOCK_LAB_URL: http://mock-lab:8000
+      MOCK_LAB_ENV_PATH: /shared-env/.env
+    volumes:
+      - lab-env:/shared-env
+    depends_on:
+      scanner:
+        condition: service_healthy
+      mock-lab:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  lab-env:

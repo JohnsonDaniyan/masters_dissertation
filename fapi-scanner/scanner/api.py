@@ -1,3 +1,6 @@
+import os
+from urllib.parse import urlparse
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
@@ -16,13 +19,33 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:3000,http://127.0.0.1:3000",
+        ).split(",")
+        if origin.strip()
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def rewrite_localhost_target(target: str) -> str:
+    """Map host-loopback lab URLs to a Docker DNS name when SCAN_LOCALHOST_REWRITE is set."""
+    replacement = os.getenv("SCAN_LOCALHOST_REWRITE", "").strip().rstrip("/")
+    if not replacement:
+        return target
+    parsed = urlparse(target)
+    host = (parsed.hostname or "").lower()
+    if host not in {"127.0.0.1", "localhost"}:
+        return target
+    port = parsed.port or (443 if parsed.scheme == "https" else 80)
+    if port != 8000:
+        return target
+    path = parsed.path.rstrip("/")
+    return f"{replacement}{path}"
 
 
 def normalise_target(value: str) -> str:
@@ -31,7 +54,7 @@ def normalise_target(value: str) -> str:
         raise ValueError("target is required")
     if not target.startswith(("http://", "https://")):
         target = f"http://{target}"
-    return target.rstrip("/")
+    return rewrite_localhost_target(target.rstrip("/"))
 
 
 class ScanRequest(BaseModel):

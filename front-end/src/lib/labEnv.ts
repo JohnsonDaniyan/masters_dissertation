@@ -54,7 +54,7 @@ export function parseToggles(contents: string): Record<string, boolean> {
 
 export function readEnvFile() {
   const filePath = envPath();
-  const contents = readFileSync(filePath, "utf8");
+  const contents = readFileSync(/* turbopackIgnore: true */ filePath, "utf8");
   if (baseline === null) baseline = contents;
   return { filePath, contents, toggles: parseToggles(contents) };
 }
@@ -83,15 +83,15 @@ export function writeToggle(key: string, value: boolean) {
     return `${line.slice(0, eq + 1)}${rendered}`;
   });
   if (!found) next.push(`${key}=${rendered}`);
-  writeFileSync(filePath, next.join("\n") + (hadTrailingNewline ? "\n" : ""), "utf8");
-  return parseToggles(readFileSync(filePath, "utf8"));
+  writeFileSync(/* turbopackIgnore: true */ filePath, next.join("\n") + (hadTrailingNewline ? "\n" : ""), "utf8");
+  return parseToggles(readFileSync(/* turbopackIgnore: true */ filePath, "utf8"));
 }
 
 export function restoreBaseline() {
   if (baseline === null) {
     return readEnvFile().toggles;
   }
-  writeFileSync(envPath(), baseline, "utf8");
+  writeFileSync(/* turbopackIgnore: true */ envPath(), baseline, "utf8");
   return parseToggles(baseline);
 }
 

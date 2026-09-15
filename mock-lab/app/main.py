@@ -23,6 +23,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "mock-lab"}
 app.include_router(metadata.router)
 app.include_router(jwks.router)
 app.include_router(par.router)

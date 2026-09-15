@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
+ENV_PATH = Path(os.getenv("MOCK_LAB_ENV_PATH", Path(__file__).resolve().parent.parent / ".env"))
 
 BOOL_FIELDS = (
     "METADATA_ENABLED",

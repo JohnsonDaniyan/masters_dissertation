@@ -1,7 +1,7 @@
 from scanner.discovery.metadata_fetch import MetadataFetch
 from fastapi.testclient import TestClient
 
-from scanner.api import app
+from scanner.api import app, normalise_target
 from tests.fake_lab import FakeLab
 from tests.test_bh_checks import FETCHED
 
@@ -30,6 +30,14 @@ EXPECTED_IDS = {
     "DCR-001",
     "DCM-001",
 }
+
+
+def test_rewrites_localhost_lab_when_configured(monkeypatch):
+    monkeypatch.setenv("SCAN_LOCALHOST_REWRITE", "http://mock-lab:8000")
+
+    assert normalise_target("http://127.0.0.1:8000") == "http://mock-lab:8000"
+    assert normalise_target("http://localhost:8000/") == "http://mock-lab:8000"
+    assert normalise_target("http://127.0.0.1:9000") == "http://127.0.0.1:9000"
 
 
 def test_health():
